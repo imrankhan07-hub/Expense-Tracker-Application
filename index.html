@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker - Full Stack</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Axios for HTTP requests -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Chart.js for statistics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="page active">
+        <div class="auth-container">
+            <h1>Expense Tracker</h1>
+            <div class="auth-box">
+                <h2>Login</h2>
+                
+                <!-- Error Messages -->
+                <div id="loginError" class="error-message hidden"></div>
+                
+                <!-- Login Form -->
+                <form id="loginForm" onsubmit="return handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginUsername">Username</label>
+                        <input 
+                            type="text" 
+                            id="loginUsername" 
+                            name="username" 
+                            required
+                            placeholder="Enter your username"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input 
+                            type="password" 
+                            id="loginPassword" 
+                            name="password" 
+                            required
+                            placeholder="Enter your password"
+                        >
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </form>
+
+                <!-- Toggle to Register -->
+                <p class="auth-toggle">
+                    Don't have an account? 
+                    <a href="#" onclick="toggleAuthPage('register'); return false;">Register here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Page -->
+    <div id="registerPage" class="page">
+        <div class="auth-container">
+            <h1>Expense Tracker</h1>
+            <div class="auth-box">
+                <h2>Register</h2>
+                
+                <!-- Error Messages -->
+                <div id="registerError" class="error-message hidden"></div>
+                
+                <!-- Register Form -->
+                <form id="registerForm" onsubmit="return handleRegister(event)">
+                    <div class="form-group">
+                        <label for="regUsername">Username</label>
+                        <input 
+                            type="text" 
+                            id="regUsername" 
+                            name="username" 
+                            required
+                            placeholder="Choose a username"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regEmail">Email</label>
+                        <input 
+                            type="email" 
+                            id="regEmail" 
+                            name="email" 
+                            required
+                            placeholder="Enter your email"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regFullName">Full Name</label>
+                        <input 
+                            type="text" 
+                            id="regFullName" 
+                            name="fullName" 
+                            required
+                            placeholder="Enter your full name"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regPassword">Password</label>
+                        <input 
+                            type="password" 
+                            id="regPassword" 
+                            name="password" 
+                            required
+                            placeholder="Create a password (min 8 chars)"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="regConfirmPassword">Confirm Password</label>
+                        <input 
+                            type="password" 
+                            id="regConfirmPassword" 
+                            name="confirmPassword" 
+                            required
+                            placeholder="Confirm your password"
+                        >
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Register</button>
+                </form>
+
+                <!-- Toggle to Login -->
+                <p class="auth-toggle">
+                    Already have an account? 
+                    <a href="#" onclick="toggleAuthPage('login'); return false;">Login here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboardPage" class="page">
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="nav-left">
+                <h1 class="app-title">Expense Tracker</h1>
+            </div>
+            <div class="nav-right">
+                <span id="currentUsername" class="user-name"></span>
+                <button onclick="handleLogout()" class="btn btn-logout">Logout</button>
+            </div>
+        </nav>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+            <button class="tab-btn" onclick="switchTab('expenses')">Expenses</button>
+            <button class="tab-btn" onclick="switchTab('analytics')">Analytics</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboardTab" class="tab-content active">
+            <div class="container">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Expenses</h3>
+                        <p class="stat-value" id="totalExpenses">₹0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Count</h3>
+                        <p class="stat-value" id="expenseCount">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Average Expense</h3>
+                        <p class="stat-value" id="avgExpense">₹0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Highest Expense</h3>
+                        <p class="stat-value" id="maxExpense">₹0</p>
+                    </div>
+                </div>
+
+                <!-- Quick Add Expense -->
+                <div class="quick-add-section">
+                    <h2>Add Quick Expense</h2>
+                    <form id="quickAddForm" onsubmit="return handleQuickAdd(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="quickDescription">Description</label>
+                                <input 
+                                    type="text" 
+                                    id="quickDescription" 
+                                    placeholder="What did you spend on?"
+                                    required
+                                >
+                            </div>
+                            <div class="form-group">
+                                <label for="quickAmount">Amount</label>
+                                <input 
+                                    type="number" 
+                                    id="quickAmount" 
+                                    placeholder="0.00" 
+                                    step="0.01"
+                                    required
+                                >
+                            </div>
+                            <div class="form-group">
+                                <label for="quickCategory">Category</label>
+                                <select id="quickCategory" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Food & Groceries">Food & Groceries</option>
+                                    <option value="Transport">Transport</option>
+                                    <option value="Utilities">Utilities</option>
+                                    <option value="Entertainment">Entertainment</option>
+                                    <option value="Shopping">Shopping</option>
+                                    <option value="Health & Medical">Health & Medical</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="quickPayment">Payment Method</label>
+                                <select id="quickPayment" required>
+                                    <option value="">Select Method</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Debit Card">Debit Card</option>
+                                    <option value="Credit Card">Credit Card</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="Online Transfer">Online Transfer</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success">Add Expense</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Recent Expenses -->
+                <div class="recent-expenses-section">
+                    <h2>Recent Expenses</h2>
+                    <div id="recentExpensesList" class="expenses-list">
+                        <p class="loading">Loading expenses...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses Management Tab -->
+        <div id="expensesTab" class="tab-content">
+            <div class="container">
+                <div class="expenses-header">
+                    <h2>Manage Expenses</h2>
+                    <button class="btn btn-primary" onclick="showAddExpenseForm()">+ Add Expense</button>
+
+                </div>
+
+                <!-- Error Message -->
+                <div id="expensesError" class="error-message hidden"></div>
+
+                <!-- Filter Section -->
+                <div class="filter-section">
+                    <div class="form-group">
+                        <label for="filterCategory">Filter by Category</label>
+                        <select id="filterCategory" onchange="filterExpenses()">
+                            <option value="">All Categories</option>
+                            <option value="Food & Groceries">Food & Groceries</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Health & Medical">Health & Medical</option>
+                            <option value="Education">Education</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-secondary" onclick="resetFilters()">Reset Filters</button>
+                </div>
+
+                <!-- Expenses List -->
+                <div id="allExpensesList" class="expenses-table">
+                    <p class="loading">Loading expenses...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analyticsTab" class="tab-content">
+            <div class="container">
+                <h2>Analytics & Reports</h2>
+
+                <!-- Charts Grid -->
+                <div class="charts-grid">
+                    <!-- Category Chart -->
+                    <div class="chart-container">
+                        <h3>Expenses by Category</h3>
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+
+                    <!-- Payment Method Chart -->
+                    <div class="chart-container">
+                        <h3>Expenses by Payment Method</h3>
+                        <canvas id="paymentChart"></canvas>
+                    </div>
+
+                    <!-- Trend Chart -->
+                    <div class="chart-container wide">
+                        <h3>Monthly Trend</h3>
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Monthly Summary -->
+                <div class="summary-section">
+                    <h3>Monthly Summary</h3>
+                    <div id="monthlySummary" class="summary-list">
+                        <p class="loading">Loading data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Add/Edit Expense -->
+    <div id="expenseModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Expense</h2>
+                <button class="modal-close" onclick="closeExpenseModal()">&times;</button>
+            </div>
+
+            <!-- Error Message -->
+            <div id="modalError" class="error-message hidden"></div>
+
+            <form id="expenseForm" onsubmit="return handleSaveExpense(event)">
+                <input type="hidden" id="expenseId" value="">
+
+                <div class="form-group">
+                    <label for="modalDescription">Description *</label>
+                    <input 
+                        type="text" 
+                        id="modalDescription" 
+                        required
+                        placeholder="What did you spend on?"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="modalAmount">Amount *</label>
+                    <input 
+                        type="number" 
+                        id="modalAmount" 
+                        step="0.01" 
+                        required
+                        placeholder="0.00"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="modalCategory">Category *</label>
+                    <select id="modalCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="Food & Groceries">Food & Groceries</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Health & Medical">Health & Medical</option>
+                        <option value="Education">Education</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="modalPayment">Payment Method *</label>
+                    <select id="modalPayment" required>
+                        <option value="">Select Method</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Debit Card">Debit Card</option>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Online Transfer">Online Transfer</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="modalDate">Date *</label>
+                    <input 
+                        type="date" 
+                        id="modalDate" 
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="modalNotes">Notes</label>
+                    <textarea 
+                        id="modalNotes" 
+                        placeholder="Add any additional notes"
+                        rows="3"
+                    ></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Save Expense</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeExpenseModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="api.js"></script>
+    <script src="auth.js"></script>
+    <script src="expenses.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
